@@ -18,6 +18,11 @@ on:
     # 09:00 KST = 00:00 UTC
     - cron: '0 0 * * *'
   workflow_dispatch: # 수동 실행 가능
+    inputs:
+      test_email:
+        description: '테스트 이메일 주소 (입력 시 해당 주소로만 발송)'
+        required: false
+        type: string
 
 jobs:
   daily-briefing:
@@ -31,7 +36,8 @@ jobs:
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       SMTP_EMAIL: ${{ secrets.SMTP_EMAIL }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-      DEFAULT_RECIPIENT: ${{ secrets.DEFAULT_RECIPIENT }}
+      DEFAULT_RECIPIENT: ${{ inputs.test_email || secrets.DEFAULT_RECIPIENT }}
+      TEST_EMAIL: ${{ inputs.test_email }}
 
     steps:
       - name: Checkout repository
