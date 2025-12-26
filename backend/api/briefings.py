@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -9,6 +10,12 @@ from models.briefing import (
     CreateBriefingRequest,
 )
 from services.briefing_service import BriefingService, BriefingServiceError
+from services.email_service import EmailService, EmailServiceError
+
+
+class SendEmailRequest(BaseModel):
+    """이메일 발송 요청"""
+    recipient: EmailStr
 
 router = APIRouter(prefix="/briefings", tags=["briefings"])
 
@@ -178,3 +185,40 @@ async def list_briefings(
             "count": len(briefings),
         },
     })
+
+
+@router.post("/{briefing_id}/send-email")
+async def send_briefing_email(briefing_id: str, request: SendEmailRequest):
+    """
+    브리핑 이메일 발송 API
+
+    지정된 이메일 주소로 브리핑을 발송합니다.
+    """
+    briefing_service = BriefingService()
+    briefing = briefing_service.get_briefing(briefing_id)
+
+    if not briefing:
+        raise HTTPException(
+            status_code=404,
+            detail=create_error_response(
+                "NOT_FOUND",
+                f"Briefing not found: {briefing_id}",
+            ),
+        )
+
+    try:
+        email_service = EmailService()
+        result = email_service.send_briefing(briefing, recipient=request.recipient)
+
+        return create_response({
+            "sent": True,
+            "recipient": result["recipient"],
+            "subject": result["subject"],
+            "sentAt": result["sent_at"],
+        })
+
+    except EmailServiceError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=create_error_response("EMAIL_SEND_FAILED", str(e)),
+        )
