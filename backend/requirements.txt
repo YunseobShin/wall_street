@@ -1,0 +1,7 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+yahooquery>=2.3.7
+pydantic>=2.10.0
+google-generativeai>=0.8.0
+python-dotenv>=1.0.0
+tzdata>=2024.1
