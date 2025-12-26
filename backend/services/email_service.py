@@ -97,24 +97,24 @@ class EmailService:
         # 변동률 색상
         top1_item = briefing.items[0] if briefing.items else None
         change_pct = top1_item.regular_market_change_percent if top1_item else 0
-        color = "#10b981" if change_pct >= 0 else "#f43f5e"
-        arrow = "↑" if change_pct >= 0 else "↓"
+        color = "#059669" if change_pct >= 0 else "#dc2626"
+        arrow = "▲" if change_pct >= 0 else "▼"
 
         # 종목 테이블 생성
         items_html = ""
         for item in briefing.items[:5]:
             pct = item.regular_market_change_percent
-            pct_color = "#10b981" if pct >= 0 else "#f43f5e"
+            pct_color = "#059669" if pct >= 0 else "#dc2626"
             items_html += f"""
             <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #333;">
-                    <strong>{item.symbol}</strong><br>
-                    <span style="color: #888; font-size: 13px;">{item.short_name}</span>
+                <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb;">
+                    <strong style="color: #1f2937;">{item.symbol}</strong><br>
+                    <span style="color: #6b7280; font-size: 13px;">{item.short_name}</span>
                 </td>
-                <td style="padding: 12px; border-bottom: 1px solid #333; text-align: right;">
+                <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937;">
                     ${item.regular_market_price:.2f}
                 </td>
-                <td style="padding: 12px; border-bottom: 1px solid #333; text-align: right; color: {pct_color};">
+                <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: {pct_color}; font-weight: 600;">
                     {pct:+.2f}%
                 </td>
             </tr>
@@ -127,60 +127,97 @@ class EmailService:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; background-color: #0b0f1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-        <!-- 헤더 -->
-        <div style="text-align: center; margin-bottom: 40px;">
-            <h1 style="color: #f5f0e6; font-size: 28px; margin: 0;">당신이 잠든 사이</h1>
-            <p style="color: #8b8680; font-size: 14px; margin-top: 8px;">
-                {briefing.date} 미국주식 브리핑
-            </p>
-        </div>
-
-        <!-- TOP 1 카드 -->
-        <div style="background: linear-gradient(135deg, #111b33, #1a2744); border-radius: 16px; padding: 32px; margin-bottom: 24px; text-align: center;">
-            <p style="color: #d4a574; font-size: 14px; margin: 0 0 16px 0;">오늘의 화제 종목</p>
-            <h2 style="color: #f5f0e6; font-size: 48px; margin: 0;">{briefing.top1_symbol}</h2>
-            <p style="color: {color}; font-size: 36px; font-weight: bold; margin: 16px 0;">
-                {arrow} {abs(change_pct):.2f}%
-            </p>
-            <p style="color: #8b8680; font-size: 14px; margin: 0;">
-                {briefing.criteria_label}
-            </p>
-        </div>
-
-        <!-- 요약 -->
-        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-            <h3 style="color: #d4a574; font-size: 16px; margin: 0 0 12px 0;">요약</h3>
-            <p style="color: #f5f0e6; font-size: 15px; line-height: 1.6; margin: 0;">
-                {briefing.summary_text}
-            </p>
-        </div>
-
-        <!-- 종목 테이블 -->
-        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-            <h3 style="color: #d4a574; font-size: 16px; margin: 0 0 16px 0;">오늘의 화제 종목</h3>
-            <table style="width: 100%; border-collapse: collapse; color: #f5f0e6;">
-                <thead>
-                    <tr style="color: #8b8680; font-size: 13px;">
-                        <th style="text-align: left; padding: 8px 12px;">종목</th>
-                        <th style="text-align: right; padding: 8px 12px;">가격</th>
-                        <th style="text-align: right; padding: 8px 12px;">변동</th>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f3f4f6;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; width: 100%;">
+                    <!-- 헤더 -->
+                    <tr>
+                        <td style="text-align: center; padding-bottom: 32px;">
+                            <h1 style="color: #1f2937; font-size: 26px; margin: 0; font-weight: 700;">당신이 잠든 사이</h1>
+                            <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">
+                                {briefing.date} 미국주식 브리핑
+                            </p>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {items_html}
-                </tbody>
-            </table>
-        </div>
 
-        <!-- 푸터 -->
-        <div style="text-align: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid #333;">
-            <p style="color: #8b8680; font-size: 12px; margin: 0;">
-                Powered by Gemini AI | 투자 권유가 아닌 정보 제공 목적입니다.
-            </p>
-        </div>
-    </div>
+                    <!-- TOP 1 카드 -->
+                    <tr>
+                        <td style="padding-bottom: 20px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #1e3a5f, #2d4a6f); border-radius: 16px;">
+                                <tr>
+                                    <td style="padding: 36px 24px; text-align: center;">
+                                        <p style="color: #fbbf24; font-size: 13px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">오늘의 화제 종목</p>
+                                        <h2 style="color: #ffffff; font-size: 52px; margin: 0; font-weight: 800;">{briefing.top1_symbol}</h2>
+                                        <p style="color: {color}; font-size: 32px; font-weight: 700; margin: 16px 0; background-color: rgba(255,255,255,0.15); display: inline-block; padding: 8px 20px; border-radius: 8px;">
+                                            {arrow} {abs(change_pct):.2f}%
+                                        </p>
+                                        <p style="color: #d1d5db; font-size: 14px; margin: 0;">
+                                            {briefing.criteria_label}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- 요약 -->
+                    <tr>
+                        <td style="padding-bottom: 20px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <h3 style="color: #b45309; font-size: 15px; margin: 0 0 12px 0; font-weight: 600;">📝 요약</h3>
+                                        <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0;">
+                                            {briefing.summary_text}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- 종목 테이블 -->
+                    <tr>
+                        <td style="padding-bottom: 20px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <h3 style="color: #b45309; font-size: 15px; margin: 0 0 16px 0; font-weight: 600;">📊 오늘의 화제 종목</h3>
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+                                            <thead>
+                                                <tr style="background-color: #f9fafb;">
+                                                    <th style="text-align: left; padding: 12px; color: #6b7280; font-size: 12px; font-weight: 600; border-bottom: 2px solid #e5e7eb;">종목</th>
+                                                    <th style="text-align: right; padding: 12px; color: #6b7280; font-size: 12px; font-weight: 600; border-bottom: 2px solid #e5e7eb;">가격</th>
+                                                    <th style="text-align: right; padding: 12px; color: #6b7280; font-size: 12px; font-weight: 600; border-bottom: 2px solid #e5e7eb;">변동</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {items_html}
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- 푸터 -->
+                    <tr>
+                        <td style="text-align: center; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+                            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                                Powered by Gemini AI | 투자 권유가 아닌 정보 제공 목적입니다.
+                            </p>
+                            <p style="color: #9ca3af; font-size: 11px; margin-top: 8px;">
+                                © 2025 당신이 잠든 사이
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
         """
