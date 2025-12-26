@@ -275,3 +275,68 @@ export async function sendBriefingEmail(
 
   return json.data;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Subscription API
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SubscriptionResponse = {
+  success: boolean;
+  data: {
+    subscriptionId: string;
+    email: string;
+    sendTimeKst: string;
+    isActive: boolean;
+    message: string;
+  };
+  meta: {
+    requestId: string;
+    generatedAt: string;
+  };
+};
+
+/**
+ * 이메일 구독 등록
+ */
+export async function subscribe(
+  email: string,
+  sendTimeKst: string = "07:00"
+): Promise<SubscriptionResponse["data"]> {
+  const url = `${API_BASE_URL}/api/v1/subscriptions`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, send_time_kst: sendTimeKst }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`구독 실패: ${res.status} - ${errorText}`);
+  }
+
+  const json: SubscriptionResponse = await res.json();
+
+  if (!json.success) {
+    throw new Error("구독에 실패했습니다");
+  }
+
+  return json.data;
+}
+
+/**
+ * 구독 취소
+ */
+export async function unsubscribe(email: string): Promise<void> {
+  const url = `${API_BASE_URL}/api/v1/subscriptions/${encodeURIComponent(email)}`;
+
+  const res = await fetch(url, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    throw new Error("구독 취소에 실패했습니다");
+  }
+}

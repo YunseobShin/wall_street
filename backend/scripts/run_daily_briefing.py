@@ -122,26 +122,68 @@ def run_daily_briefing(send_email: bool = True) -> dict:
         print("[3/3] 이메일 발송 중...")
         try:
             from services.email_service import EmailService, EmailServiceError
+            from api.subscriptions import get_active_subscriptions_for_time
 
             email_service = EmailService()
-            email_result = email_service.send_briefing(briefing)
 
-            result["steps"]["email"] = {
-                "success": True,
-                "recipient": email_result["recipient"],
-                "sent_at": email_result["sent_at"],
-            }
-            print(f"  - 수신자: {email_result['recipient']}")
-            print(f"  - 발송 시각: {email_result['sent_at']}")
-            print("  ✓ 이메일 발송 완료\n")
+            # 현재 KST 시간에 해당하는 구독자 조회
+            current_time_kst = now_kst.strftime("%H:%M")
+            # 30분 단위로 반올림 (06:00, 06:30, 07:00, ...)
+            hour = now_kst.hour
+            minute = 0 if now_kst.minute < 30 else 30
+            time_slot = f"{hour:02d}:{minute:02d}"
+
+            subscribers = get_active_subscriptions_for_time(time_slot)
+
+            if subscribers:
+                print(f"  - 구독자 수: {len(subscribers)}명 (시간대: {time_slot} KST)")
+                sent_count = 0
+                failed_count = 0
+
+                for sub in subscribers:
+                    try:
+                        email_result = email_service.send_briefing(briefing, recipient=sub.email)
+                        print(f"    ✓ {sub.email}")
+                        sent_count += 1
+                    except EmailServiceError as e:
+                        print(f"    ✗ {sub.email}: {e}")
+                        failed_count += 1
+
+                result["steps"]["email"] = {
+                    "success": True,
+                    "time_slot": time_slot,
+                    "total_subscribers": len(subscribers),
+                    "sent_count": sent_count,
+                    "failed_count": failed_count,
+                }
+                print(f"  ✓ 이메일 발송 완료 ({sent_count}/{len(subscribers)})\n")
+            else:
+                # 구독자가 없으면 기본 수신자에게 발송
+                default_recipient = os.getenv("DEFAULT_RECIPIENT")
+                if default_recipient:
+                    email_result = email_service.send_briefing(briefing, recipient=default_recipient)
+                    result["steps"]["email"] = {
+                        "success": True,
+                        "recipient": email_result["recipient"],
+                        "sent_at": email_result["sent_at"],
+                        "note": "No subscribers, sent to default recipient",
+                    }
+                    print(f"  - 구독자 없음, 기본 수신자에게 발송: {default_recipient}")
+                    print("  ✓ 이메일 발송 완료\n")
+                else:
+                    result["steps"]["email"] = {
+                        "success": True,
+                        "note": "No subscribers and no default recipient",
+                    }
+                    print("  - 구독자 및 기본 수신자 없음, 이메일 발송 스킵\n")
 
         except EmailServiceError as e:
             print(f"  ✗ 이메일 발송 실패: {e}\n")
             result["steps"]["email"] = {"success": False, "error": str(e)}
             # 이메일 실패는 전체 실패로 처리하지 않음
-        except ImportError:
-            print("  - 이메일 서비스 모듈을 찾을 수 없습니다.\n")
-            result["steps"]["email"] = {"success": False, "error": "Module not found"}
+        except ImportError as e:
+            print(f"  - 모듈 임포트 실패: {e}\n")
+            result["steps"]["email"] = {"success": False, "error": str(e)}
     else:
         print("[3/3] 이메일 발송 스킵 (--no-email)\n")
         result["steps"]["email"] = {"success": True, "skipped": True}
